@@ -27,7 +27,7 @@ namespace CRUDExample
             services.AddScoped<IPersonsRepository, PersonsRepository>();
 
             services.AddScoped<ICountriesService, CountriesService>();
-            services.AddScoped<IPersonsService, PersonsService>();
+            services.AddScoped<IPersonsGetterService, PersonsGetterService>();
 
             services.AddDbContext<ApplicationDbContext>(options =>
             {
