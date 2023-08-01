@@ -16,9 +16,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace CRUDExample.Controllers
 {
-    [ResponseHeaderFilterFactoryAttribute("My-Key-From-Controller","My-Value-From-Controller",3)]
+    [ResponseHeaderFilterFactoryAttribute("My-Key-From-Controller", "My-Value-From-Controller", 3)]
     [Route("[controller]")]
-    [TypeFilter(typeof(HandleExceptionFilter))]
+    // [TypeFilter(typeof(HandleExceptionFilter))]
     [TypeFilter(typeof(PersonAlwaysRunResultFilter))]
     public class PersonsController : Controller
     {
@@ -38,9 +38,9 @@ namespace CRUDExample.Controllers
         //Url: persons/index
         [Route("[action]")]
         [Route("/")]
-        [ServiceFilter(typeof(PersonsListActionFilter),Order =4)]
+        [ServiceFilter(typeof(PersonsListActionFilter), Order = 4)]
         [TypeFilter(typeof(PersonsListResultFilter))]
-        [ResponseHeaderFilterFactoryAttribute("MyKey-FromAction","MyValue-From-Action",1)]
+        [ResponseHeaderFilterFactoryAttribute("MyKey-FromAction", "MyValue-From-Action", 1)]
         [SkipFilter]
         public async Task<IActionResult> Index(string searchBy,
             string? searchString,
@@ -85,11 +85,11 @@ namespace CRUDExample.Controllers
         //Url: persons/create
         [Route("[action]")]
         [TypeFilter(typeof(PersonCreateAndEditPostActionFilter))]
-        [TypeFilter(typeof(FeatureDisableResourceFilter),Arguments =new object[]
+        [TypeFilter(typeof(FeatureDisableResourceFilter), Arguments = new object[]
         {
             false
         })]
-      
+
         public async Task<IActionResult> Create(PersonAddRequest personRequest)
         {
             //call the service method
@@ -103,7 +103,7 @@ namespace CRUDExample.Controllers
 
         [HttpGet]
         [Route("[action]/{personID}")] //Eg: /persons/edit/1
-        //[TypeFilter(typeof(TokenResultFilter))]
+        [TypeFilter(typeof(TokenResultFilter))]
         public async Task<IActionResult> Edit(Guid personID)
         {
             PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personID);
@@ -126,7 +126,7 @@ namespace CRUDExample.Controllers
         [Route("[action]/{personID}")]
         [TypeFilter(typeof(PersonCreateAndEditPostActionFilter))]
         [TypeFilter(typeof(TokenAuthorizationFilter))]
-       
+
         public async Task<IActionResult> Edit(PersonUpdateRequest personRequest)
         {
             PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personRequest.PersonID);
@@ -136,18 +136,14 @@ namespace CRUDExample.Controllers
                 return RedirectToAction("Index");
             }
 
-            if (ModelState.IsValid)
+            if (personResponse == null)
             {
-                PersonResponse updatedPerson = await _personsService.UpdatePerson(personRequest);
                 return RedirectToAction("Index");
             }
 
-            List<CountryResponse> countries = await _countriesService.GetAllCountries();
-            ViewBag.Countries = countries.Select(temp =>
-            new SelectListItem() { Text = temp.CountryName, Value = temp.CountryID.ToString() });
-
-            ViewBag.Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-            return View(personResponse.ToPersonUpdateRequest());
+           
+            PersonResponse updatedPerson = await _personsService.UpdatePerson(personRequest);
+            return RedirectToAction("Index");
         }
 
 

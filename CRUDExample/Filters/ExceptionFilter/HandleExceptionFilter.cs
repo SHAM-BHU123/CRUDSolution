@@ -21,7 +21,7 @@ namespace CRUDExample.Filters.ExceptionFilter
                 nameof(OnException), 
                 context.Exception.GetType().ToString(),
                 context.Exception.Message.ToString());
-            if(!_hostEnvironment.IsDevelopment())
+            if(_hostEnvironment.IsDevelopment())
             {
                 context.Result = new ContentResult()
                 {
