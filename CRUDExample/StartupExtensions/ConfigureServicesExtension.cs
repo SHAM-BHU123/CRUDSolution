@@ -12,34 +12,50 @@ namespace CRUDExample
     {
         public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddControllersWithViews(options =>
-            {
-                options.Filters.Add(new ResponseHeaderFilterFactoryAttribute("My-Key-From-Global", "My-Value-From-Global", 2));
-            });
-
-            services.AddTransient<PersonsListActionFilter>();
-
             services.AddTransient<ResponseHeaderActionFilter>();
 
+            //it adds controllers and views as services
+            services.AddControllersWithViews(options => {
+                //options.Filters.Add<ResponseHeaderActionFilter>(5);
+
+                var logger = services.BuildServiceProvider().GetRequiredService<ILogger<ResponseHeaderActionFilter>>();
+
+                options.Filters.Add(new ResponseHeaderActionFilter(logger)
+                {
+                    Key = "My-Key-From-Global",
+                    Value = "My-Value-From-Global",
+                    Order = 2
+                });
+            });
 
             //add services into IoC container
             services.AddScoped<ICountriesRepository, CountriesRepository>();
             services.AddScoped<IPersonsRepository, PersonsRepository>();
 
+            //for countries
             services.AddScoped<ICountriesService, CountriesService>();
-            services.AddScoped<IPersonsGetterService, PersonsGetterService>();
+
+            //For person
+            services.AddScoped<PersonsGetterService, PersonsGetterService>();
+
+            services.AddScoped<IPersonsGetterService, PersonGetterServiceWithUpdatedExcelFiles>();
+            services.AddScoped<IPersonsAdderService, PersonsAdderService>();
+            services.AddScoped<IPersonsDeleterService, PersonsDeleterService>();
+            services.AddScoped<IPersonsUpdaterService, PersonsUpdaterService>();
+            services.AddScoped<IPersonsSorterService, PersonsSorterService>();
 
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
 
+            services.AddTransient<PersonsListActionFilter>();
 
             services.AddHttpLogging(options =>
             {
-                options.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestProperties |
-                 Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponsePropertiesAndHeaders;
+                options.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestProperties | Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponsePropertiesAndHeaders;
             });
+
             return services;
         }
     }
